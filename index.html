@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Scanner com Senha</title>
+  <title>Scanner QR Presença</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
@@ -18,62 +18,40 @@
       margin-top: 10px;
     }
 
-    #erro {
-      color: red;
-      font-weight: bold;
+    #scanner-area, #voltar {
+      margin-top: 20px;
     }
 
-    #scanner-area, #voltar {
+    #confirmar, #voltar {
       display: none;
     }
   </style>
 </head>
 <body>
-  <h2>Acesso ao Scanner</h2>
-
-  <div id="senha-area">
-    <label>Digite a senha:</label><br>
-    <input type="password" id="senha" placeholder="Senha" />
-    <br>
-    <button onclick="verificarSenha()">Entrar</button>
-    <p id="erro"></p>
-  </div>
+  <h2>Scanner de Presença</h2>
 
   <div id="scanner-area">
-    <h2>Escaneie o QR Code</h2>
     <div id="reader" style="width:300px;"></div>
     <p>Nome lido: <strong><span id="nome"></span></strong></p>
-    <button id="confirmar" style="display:none;">Confirmar Presença</button><br>
+    <button id="confirmar">Confirmar Presença</button><br>
     <button id="voltar" onclick="reiniciar()">Iniciar Novo</button>
   </div>
 
   <script>
-    const senhaCorreta = "ufc123";
-    let scanner;
     let nomeLido = "";
-
-    function verificarSenha() {
-      const senha = document.getElementById("senha").value;
-      if (senha === senhaCorreta) {
-        document.getElementById("senha-area").style.display = "none";
-        document.getElementById("scanner-area").style.display = "block";
-        iniciarScanner();
-      } else {
-        document.getElementById("erro").innerText = "Senha incorreta!";
-      }
-    }
+    let scanner;
 
     function iniciarScanner() {
       scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
       scanner.render(onScanSuccess);
     }
 
-    function onScanSuccess(decodedText, decodedResult) {
+    function onScanSuccess(decodedText) {
       nomeLido = decodedText;
       document.getElementById("nome").innerText = nomeLido;
       document.getElementById("confirmar").style.display = "inline-block";
       document.getElementById("voltar").style.display = "inline-block";
-      scanner.clear(); // Para parar e poder reiniciar depois
+      scanner.clear(); // parar scanner depois da leitura
     }
 
     document.getElementById("confirmar").onclick = () => {
@@ -88,9 +66,11 @@
       document.getElementById("nome").innerText = "";
       document.getElementById("confirmar").style.display = "none";
       document.getElementById("voltar").style.display = "none";
-      iniciarScanner();
+      iniciarScanner(); // reiniciar scanner
     }
+
+    // Inicia automaticamente ao abrir
+    iniciarScanner();
   </script>
 </body>
 </html>
-
