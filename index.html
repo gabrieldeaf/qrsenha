@@ -54,22 +54,25 @@
   </div>
 
   <script>
-    const senhaCorreta = "ufc123"; // Altere aqui sua senha
-    let scanner;
+    const senhaCorreta = "ufc123";
+    let scanner = new Html5Qrcode("reader");
     let nomeLido = "";
 
     async function iniciarScanner() {
-      scanner = new Html5Qrcode("reader");
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        qrCodeMessage => {
-          nomeLido = qrCodeMessage;
-          document.getElementById("nome").innerText = nomeLido;
-          document.getElementById("confirmar").disabled = false;
-          scanner.stop(); // Para evitar múltiplas leituras
-        }
-      );
+      try {
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          qrCodeMessage => {
+            nomeLido = qrCodeMessage;
+            document.getElementById("nome").innerText = nomeLido;
+            document.getElementById("confirmar").disabled = false;
+            scanner.stop(); // Para não ler duas vezes
+          }
+        );
+      } catch (error) {
+        console.error("Erro ao iniciar scanner:", error);
+      }
     }
 
     function verificarSenha() {
@@ -96,15 +99,11 @@
     };
 
     async function reiniciar() {
-      document.getElementById("nome").innerText = "";
-      document.getElementById("confirmar").disabled = true;
-      document.getElementById("voltar").style.display = "none";
-
       try {
-        if (scanner) {
-          await scanner.stop();
-          await scanner.clear();
-        }
+        await scanner.stop();
+        document.getElementById("nome").innerText = "";
+        document.getElementById("confirmar").disabled = true;
+        document.getElementById("voltar").style.display = "none";
         iniciarScanner();
       } catch (e) {
         console.error("Erro ao reiniciar scanner:", e);
@@ -113,3 +112,4 @@
   </script>
 </body>
 </html>
+
