@@ -26,6 +26,12 @@
       color: red;
       font-weight: bold;
     }
+
+    #voltar {
+      display: none;
+      margin-top: 15px;
+      background-color: #ccc;
+    }
   </style>
 </head>
 <body>
@@ -43,11 +49,14 @@
     <h2>Escaneie o QR Code</h2>
     <div id="reader" style="width:300px;"></div>
     <p>Nome lido: <strong><span id="nome"></span></strong></p>
-    <button id="confirmar" disabled>Confirmar Presença</button>
+    <button id="confirmar" disabled>Confirmar Presença</button><br>
+    <button id="voltar" onclick="reiniciar()">Iniciar Novo</button>
   </div>
 
   <script>
     const senhaCorreta = "ufc123"; // 🔐 Altere aqui sua senha
+    let scanner;
+    let nomeLido = "";
 
     function verificarSenha() {
       const senhaDigitada = document.getElementById("senha").value;
@@ -61,9 +70,7 @@
     }
 
     function iniciarScanner() {
-      let nomeLido = "";
-
-      const scanner = new Html5Qrcode("reader");
+      scanner = new Html5Qrcode("reader");
       scanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
@@ -72,17 +79,31 @@
           nomeLido = qrCodeMessage;
           document.getElementById("nome").innerText = nomeLido;
           document.getElementById("confirmar").disabled = false;
-
-          document.getElementById("confirmar").onclick = () => {
-            const dataHora = new Date().toLocaleString();
-            const url = "https://script.google.com/macros/s/AKfycbyxnFD4y8dEciIi0qCJ8G5xYnKyMODE3Smq92xV24H7f9kZHQy9Kt3ftm2NxXM3AgpH0Q/exec";
-            fetch(`${url}?nome=${encodeURIComponent(nomeLido)}&data=${encodeURIComponent(dataHora)}`)
-              .then(() => alert("Presença confirmada!"))
-              .catch(() => alert("Erro ao enviar presença"));
-          };
         }
       );
+    }
+
+    document.getElementById("confirmar").onclick = () => {
+      const dataHora = new Date().toLocaleString();
+      const url = "https://script.google.com/macros/s/AKfycbyxnFD4y8dEciIi0qCJ8G5xYnKyMODE3Smq92xV24H7f9kZHQy9Kt3ftm2NxXM3AgpH0Q/exec";
+      fetch(`${url}?nome=${encodeURIComponent(nomeLido)}&data=${encodeURIComponent(dataHora)}`)
+        .then(() => {
+          alert("Presença confirmada!");
+          document.getElementById("confirmar").disabled = true;
+          document.getElementById("voltar").style.display = "inline-block";
+        })
+        .catch(() => alert("Erro ao enviar presença"));
+    };
+
+    function reiniciar() {
+      document.getElementById("nome").innerText = "";
+      document.getElementById("confirmar").disabled = true;
+      document.getElementById("voltar").style.display = "none";
+      scanner.clear().then(() => {
+        iniciarScanner();
+      });
     }
   </script>
 </body>
 </html>
+
