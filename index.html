@@ -54,9 +54,23 @@
   </div>
 
   <script>
-    const senhaCorreta = "ufc123"; // 🔐 Altere aqui sua senha
+    const senhaCorreta = "ufc123"; // Altere aqui sua senha
     let scanner;
     let nomeLido = "";
+
+    async function iniciarScanner() {
+      scanner = new Html5Qrcode("reader");
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          nomeLido = qrCodeMessage;
+          document.getElementById("nome").innerText = nomeLido;
+          document.getElementById("confirmar").disabled = false;
+          scanner.stop(); // Para evitar múltiplas leituras
+        }
+      );
+    }
 
     function verificarSenha() {
       const senhaDigitada = document.getElementById("senha").value;
@@ -67,20 +81,6 @@
       } else {
         document.getElementById("erro").innerText = "Senha incorreta!";
       }
-    }
-
-    function iniciarScanner() {
-      scanner = new Html5Qrcode("reader");
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        qrCodeMessage => {
-          scanner.stop();
-          nomeLido = qrCodeMessage;
-          document.getElementById("nome").innerText = nomeLido;
-          document.getElementById("confirmar").disabled = false;
-        }
-      );
     }
 
     document.getElementById("confirmar").onclick = () => {
@@ -95,15 +95,21 @@
         .catch(() => alert("Erro ao enviar presença"));
     };
 
-    function reiniciar() {
+    async function reiniciar() {
       document.getElementById("nome").innerText = "";
       document.getElementById("confirmar").disabled = true;
       document.getElementById("voltar").style.display = "none";
-      scanner.clear().then(() => {
+
+      try {
+        if (scanner) {
+          await scanner.stop();
+          await scanner.clear();
+        }
         iniciarScanner();
-      });
+      } catch (e) {
+        console.error("Erro ao reiniciar scanner:", e);
+      }
     }
   </script>
 </body>
 </html>
-
