@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Scanner com Senha</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    input, button {
+      font-size: 18px;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    #reader {
+      margin: 20px auto;
+    }
+
+    #erro {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Acesso ao Scanner</h2>
+
+  <div id="senha-area">
+    <label>Digite a senha:</label><br>
+    <input type="password" id="senha" placeholder="Senha" />
+    <br>
+    <button onclick="verificarSenha()">Entrar</button>
+    <p id="erro"></p>
+  </div>
+
+  <div id="scanner-area" style="display:none;">
+    <h2>Escaneie o QR Code</h2>
+    <div id="reader" style="width:300px;"></div>
+    <p>Nome lido: <strong><span id="nome"></span></strong></p>
+    <button id="confirmar" disabled>Confirmar Presença</button>
+  </div>
+
+  <script>
+    const senhaCorreta = "ufc123"; // 🔐 Altere aqui sua senha
+
+    function verificarSenha() {
+      const senhaDigitada = document.getElementById("senha").value;
+      if (senhaDigitada === senhaCorreta) {
+        document.getElementById("senha-area").style.display = "none";
+        document.getElementById("scanner-area").style.display = "block";
+        iniciarScanner();
+      } else {
+        document.getElementById("erro").innerText = "Senha incorreta!";
+      }
+    }
+
+    function iniciarScanner() {
+      let nomeLido = "";
+
+      const scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          scanner.stop();
+          nomeLido = qrCodeMessage;
+          document.getElementById("nome").innerText = nomeLido;
+          document.getElementById("confirmar").disabled = false;
+
+          document.getElementById("confirmar").onclick = () => {
+            const dataHora = new Date().toLocaleString();
+            const url = "https://script.google.com/macros/s/AKfycbyxnFD4y8dEciIi0qCJ8G5xYnKyMODE3Smq92xV24H7f9kZHQy9Kt3ftm2NxXM3AgpH0Q/exec";
+            fetch(`${url}?nome=${encodeURIComponent(nomeLido)}&data=${encodeURIComponent(dataHora)}`)
+              .then(() => alert("Presença confirmada!"))
+              .catch(() => alert("Erro ao enviar presença"));
+          };
+        }
+      );
+    }
+  </script>
+</body>
+</html>
