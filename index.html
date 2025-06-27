@@ -18,19 +18,13 @@
       margin-top: 10px;
     }
 
-    #reader {
-      margin: 20px auto;
-    }
-
     #erro {
       color: red;
       font-weight: bold;
     }
 
-    #voltar {
+    #scanner-area, #voltar {
       display: none;
-      margin-top: 15px;
-      background-color: #ccc;
     }
   </style>
 </head>
@@ -45,39 +39,22 @@
     <p id="erro"></p>
   </div>
 
-  <div id="scanner-area" style="display:none;">
+  <div id="scanner-area">
     <h2>Escaneie o QR Code</h2>
     <div id="reader" style="width:300px;"></div>
     <p>Nome lido: <strong><span id="nome"></span></strong></p>
-    <button id="confirmar" disabled>Confirmar Presença</button><br>
+    <button id="confirmar" style="display:none;">Confirmar Presença</button><br>
     <button id="voltar" onclick="reiniciar()">Iniciar Novo</button>
   </div>
 
   <script>
     const senhaCorreta = "ufc123";
-    let scanner = new Html5Qrcode("reader");
+    let scanner;
     let nomeLido = "";
 
-    async function iniciarScanner() {
-      try {
-        await scanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          qrCodeMessage => {
-            nomeLido = qrCodeMessage;
-            document.getElementById("nome").innerText = nomeLido;
-            document.getElementById("confirmar").disabled = false;
-            scanner.stop(); // Para não ler duas vezes
-          }
-        );
-      } catch (error) {
-        console.error("Erro ao iniciar scanner:", error);
-      }
-    }
-
     function verificarSenha() {
-      const senhaDigitada = document.getElementById("senha").value;
-      if (senhaDigitada === senhaCorreta) {
+      const senha = document.getElementById("senha").value;
+      if (senha === senhaCorreta) {
         document.getElementById("senha-area").style.display = "none";
         document.getElementById("scanner-area").style.display = "block";
         iniciarScanner();
@@ -86,28 +63,32 @@
       }
     }
 
+    function iniciarScanner() {
+      scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      scanner.render(onScanSuccess);
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      nomeLido = decodedText;
+      document.getElementById("nome").innerText = nomeLido;
+      document.getElementById("confirmar").style.display = "inline-block";
+      document.getElementById("voltar").style.display = "inline-block";
+      scanner.clear(); // Para parar e poder reiniciar depois
+    }
+
     document.getElementById("confirmar").onclick = () => {
       const dataHora = new Date().toLocaleString();
       const url = "https://script.google.com/macros/s/AKfycbyxnFD4y8dEciIi0qCJ8G5xYnKyMODE3Smq92xV24H7f9kZHQy9Kt3ftm2NxXM3AgpH0Q/exec";
       fetch(`${url}?nome=${encodeURIComponent(nomeLido)}&data=${encodeURIComponent(dataHora)}`)
-        .then(() => {
-          alert("Presença confirmada!");
-          document.getElementById("confirmar").disabled = true;
-          document.getElementById("voltar").style.display = "inline-block";
-        })
+        .then(() => alert("Presença confirmada!"))
         .catch(() => alert("Erro ao enviar presença"));
     };
 
-    async function reiniciar() {
-      try {
-        await scanner.stop();
-        document.getElementById("nome").innerText = "";
-        document.getElementById("confirmar").disabled = true;
-        document.getElementById("voltar").style.display = "none";
-        iniciarScanner();
-      } catch (e) {
-        console.error("Erro ao reiniciar scanner:", e);
-      }
+    function reiniciar() {
+      document.getElementById("nome").innerText = "";
+      document.getElementById("confirmar").style.display = "none";
+      document.getElementById("voltar").style.display = "none";
+      iniciarScanner();
     }
   </script>
 </body>
